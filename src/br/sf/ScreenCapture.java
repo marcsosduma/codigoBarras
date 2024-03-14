@@ -207,8 +207,12 @@ class CaptureScreenPanel extends JPanel {
     }
 
     private void captureScreen() {
-        // Iniciar a captura da tela completa
         try {
+            Robot robot = new Robot();
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            Rectangle screenRect = new Rectangle(screenSize);
+            BufferedImage image = robot.createScreenCapture(screenRect);
+
             JFrame captureFrame = new JFrame("Screen Capture");
             ScreenCapture screenCapturePanel = new ScreenCapture(image, (JFrame) SwingUtilities.getWindowAncestor(this));
             captureFrame.add(screenCapturePanel);
@@ -220,4 +224,5 @@ class CaptureScreenPanel extends JPanel {
             ex.printStackTrace();
         }
     }
+
 }
