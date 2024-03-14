@@ -15,7 +15,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
 
     public ScreenCapture(BufferedImage image, JFrame initialFrame) {
         this.image = image;
-        this.initialFrame = initialFrame; // Inicializa a referência a initialFrame
+        this.initialFrame = initialFrame; // Inicializa a initialFrame
         setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
         setOpaque(false);
         addMouseListener(this);
@@ -25,6 +25,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+    	setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
         g.drawImage(image, 0, 0, this);
         if (startPoint != null && endPoint != null) {
             int x = Math.min(startPoint.x, endPoint.x);
@@ -40,6 +41,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
 
     @Override
     public void mouseClicked(MouseEvent e) {
+    	
     }
 
     @Override
@@ -54,9 +56,10 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         endPoint = e.getPoint();
         repaint();
         saveSelectedArea();
-        if (initialFrame != null) { // Usando initialFrame ao invés de frame
+        if (initialFrame != null) { 
             initialFrame.dispose(); // Fecha o initialFrame
         }
+        setCursor(Cursor.getDefaultCursor());
         showCapturedImage(); // Mostra apenas a imagem selecionada
     }
 
@@ -89,9 +92,6 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
 
         try {
             BufferedImage selectedImage = image.getSubimage(x, y, width, height);
-            File outputFile = new File("selected_area.png");
-            ImageIO.write(selectedImage, "png", outputFile);
-            System.out.println("Área selecionada salva com sucesso em: " + outputFile.getAbsolutePath());
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -118,10 +118,31 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         // Obtém a subimagem da área selecionada
         BufferedImage selectedImage = image.getSubimage(x, y, width, height);
 
+        String barcode = BarcodeSearch.stringCode(selectedImage);
+
         // Exibe a imagem selecionada em um novo JFrame
         final JFrame selectedImageFrame = new JFrame("Imagem Selecionada");
+        
+        // Cria um JPanel para organizar os componentes
+        JPanel panel = new JPanel(new BorderLayout());
+        
+        // Adiciona o JPanel ao JFrame
+        selectedImageFrame.add(panel);
+
+        JLabel lb1 = new JLabel("Código: ");
+        JLabel lb2 = new JLabel(barcode);
+        lb2.setForeground(Color.RED); // Define a cor para lb2, se desejar
+        
+        // Adiciona lb1 e lb2 ao JPanel
+        JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        labelPanel.add(lb1);
+        labelPanel.add(lb2);
+        panel.add(labelPanel, BorderLayout.NORTH);
+        
         JLabel selectedImageLabel = new JLabel(new ImageIcon(selectedImage));
-        selectedImageFrame.add(selectedImageLabel);
+        
+        // Adiciona a imagem ao JPanel
+        panel.add(selectedImageLabel, BorderLayout.CENTER);
 
         // Cria e adiciona o botão "Fechar"
         JButton closeButton = new JButton("Fechar");
@@ -132,7 +153,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
                 restartCapture(); // Reinicia a captura após fechar a imagem selecionada
             }
         });
-        selectedImageFrame.add(closeButton, BorderLayout.SOUTH);
+        panel.add(closeButton, BorderLayout.SOUTH);
 
         selectedImageFrame.pack();
         selectedImageFrame.setLocationRelativeTo(null);
