@@ -28,36 +28,40 @@ import com.google.zxing.common.HybridBinarizer;
 public class BarcodeSearch {
 
     public static BufferedImage stringCode(BufferedImage image, StringBuilder code) {
-        code.append("Not Found....");
         BufferedImage newImage = null;
-        try {
-        	
-        	// Rotacionar a imagem
-            BufferedImage rotatedImage = ImageRotation.rotateImage(image);
-            // Escalona a imagem para o dobro do tamanho original
-            BufferedImage scaledImage = scaleImage(rotatedImage, 1);
-            // Convertendo a imagem para tons de cinza
-            BufferedImage grayscaleImage = convertToGrayscale(scaledImage);
-            // Filtragem de suavização para redução de ruído
-            BufferedImage smoothedImage = applySmoothingFilter(grayscaleImage);
-            // Remoção de ruído
-            BufferedImage denoisedImage = removeNoise(smoothedImage);
-            // Aprimoramento de contraste adaptativo
-            BufferedImage enhancedImage = enhanceContrast(denoisedImage);
-            // Detecção de bordas
-            newImage = detectEdges(enhancedImage);
-            // Detecção de códigos de barras
-            String valor = detectBarcode(newImage);
-            code.setLength(0);
-            code = code.append(valor);
-        } catch (ReaderException e) {
-            System.out.println("No barcode found");
-        } catch (Exception e) {
-            e.printStackTrace();
+        String valor = "";
+        code.append("");
+        for(int m = 1; m<3; m++) {
+            try {      
+            	 valor = "Not Found....";
+            	// Rotacionar a imagem
+                //BufferedImage rotatedImage = ImageRotation.rotateImage(image);
+                //BufferedImage preprocessImage = preprocessImage(image);
+                // Escalona a imagem para o dobro do tamanho original
+                BufferedImage scaledImage = scaleImage(image, 10 * m);
+                // Convertendo a imagem para tons de cinza
+                BufferedImage grayscaleImage = convertToBlackAndWhite(scaledImage);
+                // Filtragem de suavização para redução de ruído
+                BufferedImage smoothedImage = applySmoothingFilter(grayscaleImage);
+                // Remoção de ruído
+                BufferedImage denoisedImage = removeNoise(smoothedImage);
+                // Aprimoramento de contraste adaptativo
+                BufferedImage enhancedImage = enhanceContrast(denoisedImage);
+                // Detecção de bordas
+                newImage = detectEdges(enhancedImage);
+                // Detecção de códigos de barras
+                valor = detectBarcode(newImage);
+                code.setLength(0);
+                code = code.append(valor);
+                break;
+            } catch (ReaderException e) {
+                System.out.println("No barcode found");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return newImage;
     }
-
     
     public static BufferedImage scaleImage(BufferedImage image, double scale) {
         int scaledWidth = (int) (image.getWidth() * scale);
@@ -68,6 +72,33 @@ public class BarcodeSearch {
         g2d.drawImage(image, 0, 0, scaledWidth, scaledHeight, null);
         g2d.dispose();
         return scaledImage;
+    }
+
+    public static BufferedImage convertToBlackAndWhite(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        BufferedImage binaryImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_BINARY);
+        
+        // Percorre cada pixel da imagem original
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Obtém o valor de intensidade do pixel na imagem original
+                int rgb = image.getRGB(x, y);
+                int red = (rgb >> 16) & 0xFF;
+                int green = (rgb >> 8) & 0xFF;
+                int blue = (rgb) & 0xFF;
+                
+                // Calcula o valor médio da intensidade para decidir se será branco ou preto
+                int averageIntensity = (red + green + blue) / 3;
+
+                // Define o pixel correspondente na imagem binária como branco ou preto
+                int binaryValue = (averageIntensity < 128) ? 0xFF000000 : 0xFFFFFFFF;
+                binaryImage.setRGB(x, y, binaryValue);
+            }
+        }
+
+        return binaryImage;
     }
 
     public static BufferedImage convertToGrayscale(BufferedImage image) {
