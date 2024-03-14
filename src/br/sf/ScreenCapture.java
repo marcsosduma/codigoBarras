@@ -1,4 +1,5 @@
 package br.sf;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -10,10 +11,11 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
     private BufferedImage image;
     private Point startPoint;
     private Point endPoint;
-    private JFrame frame;
+    private JFrame initialFrame; // Referência ao JFrame initialFrame
 
-    public ScreenCapture(BufferedImage image) {
+    public ScreenCapture(BufferedImage image, JFrame initialFrame) {
         this.image = image;
+        this.initialFrame = initialFrame; // Inicializa a referência a initialFrame
         setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
         setOpaque(false);
         addMouseListener(this);
@@ -52,11 +54,10 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         endPoint = e.getPoint();
         repaint();
         saveSelectedArea();
-        if (frame != null) {
-            frame.dispose(); // Fecha a tela de captura se frame não for nulo
+        if (initialFrame != null) { // Usando initialFrame ao invés de frame
+            initialFrame.dispose(); // Fecha o initialFrame
         }
-        //showCapturedImage();
-        restartCapture(); // Reinicia a captura após clicar em "OK"
+        showCapturedImage(); // Mostra apenas a imagem selecionada
     }
 
     @Override
@@ -95,27 +96,50 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
             ex.printStackTrace();
         }
     }
+    
+    private void closePreviousFrames() {
+        Frame[] frames = Frame.getFrames();
+        for (Frame frame : frames) {
+            if (frame instanceof JFrame) {
+                frame.dispose();
+            }
+        }
+    }
 
     private void showCapturedImage() {
-        final JFrame captureFrame = new JFrame("Imagem Capturada");
-        JLabel imageLabel = new JLabel(new ImageIcon(image));
-        JButton okButton = new JButton("OK");
-        okButton.addActionListener(new ActionListener() {
+        // Determina a área selecionada
+        int x = Math.min(startPoint.x, endPoint.x);
+        int y = Math.min(startPoint.y, endPoint.y);
+        int width = Math.abs(startPoint.x - endPoint.x);
+        int height = Math.abs(startPoint.y - endPoint.y);
+
+        // Obtém a subimagem da área selecionada
+        BufferedImage selectedImage = image.getSubimage(x, y, width, height);
+
+        // Exibe a imagem selecionada em um novo JFrame
+        final JFrame selectedImageFrame = new JFrame("Imagem Selecionada");
+        JLabel selectedImageLabel = new JLabel(new ImageIcon(selectedImage));
+        selectedImageFrame.add(selectedImageLabel);
+
+        // Cria e adiciona o botão "Fechar"
+        JButton closeButton = new JButton("Fechar");
+        closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                restartCapture();
-                captureFrame.dispose();
+                selectedImageFrame.dispose(); // Fecha a janela da imagem selecionada
+                closePreviousFrames();
+                restartCapture(); // Reinicia a captura após fechar a imagem selecionada
             }
         });
-        captureFrame.setLayout(new BorderLayout());
-        captureFrame.add(imageLabel, BorderLayout.CENTER);
-        captureFrame.add(okButton, BorderLayout.SOUTH);
-        captureFrame.pack();
-        captureFrame.setLocationRelativeTo(null);
-        captureFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        captureFrame.setVisible(true);
+        selectedImageFrame.add(closeButton, BorderLayout.SOUTH);
+
+        selectedImageFrame.pack();
+        selectedImageFrame.setLocationRelativeTo(null);
+        selectedImageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        selectedImageFrame.setVisible(true);
     }
-    
+
+
     private void restartCapture() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -126,13 +150,13 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
                     Rectangle screenRect = new Rectangle(screenSize);
                     BufferedImage image = robot.createScreenCapture(screenRect);
 
-                    JFrame initialFrame = new JFrame("Captura Tela");
-                    initialFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    JFrame captureFrame = new JFrame("Captura Tela");
+                    captureFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     CaptureScreenPanel captureScreenPanel = new CaptureScreenPanel(image);
-                    initialFrame.add(captureScreenPanel);
-                    initialFrame.pack();
-                    initialFrame.setLocationRelativeTo(null);
-                    initialFrame.setVisible(true);
+                    captureFrame.add(captureScreenPanel);
+                    captureFrame.pack();
+                    captureFrame.setLocationRelativeTo(null);
+                    captureFrame.setVisible(true);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -150,7 +174,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
                     Rectangle screenRect = new Rectangle(screenSize);
                     BufferedImage image = robot.createScreenCapture(screenRect);
 
-                    JFrame initialFrame = new JFrame("Captura Tela");
+                    final JFrame initialFrame = new JFrame("Captura Tela");
                     initialFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     CaptureScreenPanel captureScreenPanel = new CaptureScreenPanel(image);
                     initialFrame.add(captureScreenPanel);
@@ -176,7 +200,6 @@ class CaptureScreenPanel extends JPanel {
         captureButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Captura a tela somente após o clique no botão "Capturar"
                 captureScreen();
             }
         });
@@ -184,19 +207,10 @@ class CaptureScreenPanel extends JPanel {
     }
 
     private void captureScreen() {
-        // Obtém a janela pai do painel atual
-        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
-        frame.dispose(); // Fecha a tela de captura
-
-        // Inicia a captura da tela completa
+        // Iniciar a captura da tela completa
         try {
-            Robot robot = new Robot();
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            Rectangle screenRect = new Rectangle(screenSize);
-            BufferedImage image = robot.createScreenCapture(screenRect);
-
             JFrame captureFrame = new JFrame("Screen Capture");
-            ScreenCapture screenCapturePanel = new ScreenCapture(image);
+            ScreenCapture screenCapturePanel = new ScreenCapture(image, (JFrame) SwingUtilities.getWindowAncestor(this));
             captureFrame.add(screenCapturePanel);
             captureFrame.pack();
             captureFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
