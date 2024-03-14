@@ -34,11 +34,12 @@ public class BarcodeSearch {
         for(int m = 1; m<3; m++) {
             try {      
             	 valor = "Not Found....";
+            	 code.setLength(0);
             	// Rotacionar a imagem
-                //BufferedImage rotatedImage = ImageRotation.rotateImage(image);
+                BufferedImage rotatedImage = ImageRotation.rotateImage(image);
                 //BufferedImage preprocessImage = preprocessImage(image);
                 // Escalona a imagem para o dobro do tamanho original
-                BufferedImage scaledImage = scaleImage(image, 10 * m);
+                BufferedImage scaledImage = scaleImage(image, 5 * m);
                 // Convertendo a imagem para tons de cinza
                 BufferedImage grayscaleImage = convertToBlackAndWhite(scaledImage);
                 // Filtragem de suavização para redução de ruído
@@ -50,12 +51,11 @@ public class BarcodeSearch {
                 // Detecção de bordas
                 newImage = detectEdges(enhancedImage);
                 // Detecção de códigos de barras
-                valor = detectBarcode(newImage);
-                code.setLength(0);
+                valor = detectBarcode(newImage);                
                 code = code.append(valor);
                 break;
             } catch (ReaderException e) {
-                System.out.println("No barcode found");
+                code = code.append(valor);
             } catch (Exception e) {
                 e.printStackTrace();
             }

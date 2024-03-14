@@ -1,11 +1,31 @@
 package br.sf;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import javax.imageio.ImageIO;
-import javax.swing.*;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 public class ScreenCapture extends JPanel implements MouseListener, MouseMotionListener {
     private BufferedImage image;
@@ -86,7 +106,9 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
     }
 
     private void saveSelectedArea() {
-        if (startPoint == null || endPoint == null) {
+        if (startPoint == null || endPoint == null || endPoint.x==startPoint.x
+        		|| endPoint.y==startPoint.y) {
+        	restartCapture();
             return;
         }
         int x = Math.min(startPoint.x, endPoint.x);
@@ -137,6 +159,10 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
 
         JLabel lb1 = new JLabel("Código: ");
         JLabel lb2 = new JLabel(barcode.toString());
+        StringSelection stringSelection = new StringSelection(barcode.toString());
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
+
         lb2.setForeground(Color.RED); // Define a cor para lb2, se desejar
         
         // Adiciona lb1 e lb2 ao JPanel
@@ -145,7 +171,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         labelPanel.add(lb2);
         panel.add(labelPanel, BorderLayout.NORTH);
         
-        JLabel selectedImageLabel = new JLabel(new ImageIcon(selectedImage));
+        JLabel selectedImageLabel = new JLabel(new ImageIcon(newImage));
         
         // Adiciona a imagem ao JPanel
         panel.add(selectedImageLabel, BorderLayout.CENTER);
@@ -162,8 +188,16 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         panel.add(closeButton, BorderLayout.SOUTH);
 
         selectedImageFrame.pack();
-        selectedImageFrame.setLocationRelativeTo(null);
+        //selectedImageFrame.setLocationRelativeTo(null);
         selectedImageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Centraliza o JFrame horizontalmente e posiciona-o no topo da tela
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        int xx = (dim.width - selectedImageFrame.getSize().width) / 2;
+        if(xx<0) xx = 0;
+        int yy = 50; // Posiciona o JFrame no topo da tela
+        selectedImageFrame.setLocation(xx, yy);
+        
         selectedImageFrame.setVisible(true);
     }
 
@@ -183,7 +217,13 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
                     CaptureScreenPanel captureScreenPanel = new CaptureScreenPanel(image);
                     captureFrame.add(captureScreenPanel);
                     captureFrame.pack();
-                    captureFrame.setLocationRelativeTo(null);
+                    //captureFrame.setLocationRelativeTo(null);
+                    // Centraliza o JFrame horizontalmente e posiciona-o no topo da tela
+                    Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+                    int x = (dim.width - captureFrame.getSize().width) / 2;
+                    int y = 50; // Posiciona o JFrame no topo da tela
+                    captureFrame.setLocation(x, y);
+                    
                     captureFrame.setVisible(true);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -207,7 +247,14 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
                     CaptureScreenPanel captureScreenPanel = new CaptureScreenPanel(image);
                     initialFrame.add(captureScreenPanel);
                     initialFrame.pack();
-                    initialFrame.setLocationRelativeTo(null);
+                    //initialFrame.setLocationRelativeTo(null);
+                    
+                 // Centraliza o JFrame horizontalmente e posiciona-o no topo da tela
+                    Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+                    int x = (dim.width - initialFrame.getSize().width) / 2;
+                    int y = 50; // Posiciona o JFrame no topo da tela
+                    initialFrame.setLocation(x, y);
+                    
                     initialFrame.setVisible(true);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -224,6 +271,7 @@ class CaptureScreenPanel extends JPanel {
     public CaptureScreenPanel(BufferedImage image) {
         this.image = image;
         setLayout(new BorderLayout());
+        setPreferredSize(new Dimension(250, 50));
         captureButton = new JButton("Capturar");
         captureButton.addActionListener(new ActionListener() {
             @Override
