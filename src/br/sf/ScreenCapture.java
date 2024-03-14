@@ -113,6 +113,8 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         int width = Math.abs(startPoint.x - endPoint.x);
         int height = Math.abs(startPoint.y - endPoint.y);
 
+        closePreviousFrames();
+
         // Obtém a subimagem da área selecionada
         BufferedImage selectedImage = image.getSubimage(x, y, width, height);
 
@@ -127,7 +129,6 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
             @Override
             public void actionPerformed(ActionEvent e) {
                 selectedImageFrame.dispose(); // Fecha a janela da imagem selecionada
-                closePreviousFrames();
                 restartCapture(); // Reinicia a captura após fechar a imagem selecionada
             }
         });
