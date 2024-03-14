@@ -1,14 +1,24 @@
 package br.sf;
 
-import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
+import javax.imageio.ImageIO;
+
+import com.google.zxing.BarcodeFormat;
 import com.google.zxing.BinaryBitmap;
+import com.google.zxing.DecodeHintType;
 import com.google.zxing.LuminanceSource;
 import com.google.zxing.MultiFormatReader;
 import com.google.zxing.ReaderException;
@@ -17,34 +27,38 @@ import com.google.zxing.common.HybridBinarizer;
 
 public class BarcodeSearch {
 
-    public static String stringCode(BufferedImage image) {
-        String code = "Not Found....";
+    public static BufferedImage stringCode(BufferedImage image, StringBuilder code) {
+        code.append("Not Found....");
+        BufferedImage newImage = null;
         try {
+        	
+        	// Rotacionar a imagem
+            BufferedImage rotatedImage = ImageRotation.rotateImage(image);
             // Escalona a imagem para o dobro do tamanho original
-            BufferedImage scaledImage = scaleImage(image, 2);
-
+            BufferedImage scaledImage = scaleImage(rotatedImage, 1);
             // Convertendo a imagem para tons de cinza
             BufferedImage grayscaleImage = convertToGrayscale(scaledImage);
-
+            // Filtragem de suavização para redução de ruído
+            BufferedImage smoothedImage = applySmoothingFilter(grayscaleImage);
             // Remoção de ruído
-            BufferedImage denoisedImage = removeNoise(grayscaleImage);
-
+            BufferedImage denoisedImage = removeNoise(smoothedImage);
             // Aprimoramento de contraste adaptativo
             BufferedImage enhancedImage = enhanceContrast(denoisedImage);
-
             // Detecção de bordas
-            BufferedImage edgeDetectedImage = detectEdges(enhancedImage);
-
+            newImage = detectEdges(enhancedImage);
             // Detecção de códigos de barras
-            code = detectBarcode(edgeDetectedImage);
+            String valor = detectBarcode(newImage);
+            code.setLength(0);
+            code = code.append(valor);
         } catch (ReaderException e) {
             System.out.println("No barcode found");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return code;
+        return newImage;
     }
 
+    
     public static BufferedImage scaleImage(BufferedImage image, double scale) {
         int scaledWidth = (int) (image.getWidth() * scale);
         int scaledHeight = (int) (image.getHeight() * scale);
@@ -62,6 +76,20 @@ public class BarcodeSearch {
         g2d.drawImage(image, 0, 0, null);
         g2d.dispose();
         return grayImage;
+    }
+
+    public static BufferedImage applySmoothingFilter(BufferedImage image) {
+        // Aplica um filtro de suavização (média ponderada) para reduzir o ruído
+        BufferedImage smoothedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        int kernelSize = 3; // Tamanho do kernel
+        float[] kernel = {
+                1.0f / 16, 2.0f / 16, 1.0f / 16,
+                2.0f / 16, 4.0f / 16, 2.0f / 16,
+                1.0f / 16, 2.0f / 16, 1.0f / 16
+        }; // Kernel com média ponderada
+        BufferedImageOp op = new ConvolveOp(new Kernel(kernelSize, kernelSize, kernel));
+        op.filter(image, smoothedImage);
+        return smoothedImage;
     }
 
     public static BufferedImage removeNoise(BufferedImage image) {
@@ -120,7 +148,8 @@ public class BarcodeSearch {
     }
 
     public static BufferedImage enhanceContrast(BufferedImage image) {
-        // Realiza o esticamento de contraste
+        // Aplica um simples esticamento de contraste
+
         BufferedImage enhancedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
         int minPixel = 255;
         int maxPixel = 0;
@@ -161,7 +190,18 @@ public class BarcodeSearch {
     private static String detectBarcode(BufferedImage image) throws Exception {
         LuminanceSource source = new BufferedImageLuminanceSource(image);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+        
         MultiFormatReader reader = new MultiFormatReader();
+        Map<DecodeHintType, Object> hints = new EnumMap(DecodeHintType.class);
+        
+        List<BarcodeFormat> formats = new ArrayList();
+        for (BarcodeFormat format : BarcodeFormat.values()) {
+            formats.add(format);
+        }
+        hints.put(DecodeHintType.POSSIBLE_FORMATS, formats);
+        
+        reader.setHints(hints);
+        
         Result result = reader.decode(bitmap);
         return result.getText();
     }
@@ -170,7 +210,8 @@ public class BarcodeSearch {
         try {
             File file = new File("C:\\docs\\codigo_barra_exemplo.png");
             BufferedImage image = ImageIO.read(file);
-            String result = stringCode(image);
+            StringBuilder result = new StringBuilder("");
+            BufferedImage newImage = stringCode(image, result);
             System.out.println("Barcode text is " + result);
         } catch (IOException e) {
             e.printStackTrace();

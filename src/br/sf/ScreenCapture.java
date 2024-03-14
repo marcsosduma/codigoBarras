@@ -60,7 +60,11 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
             initialFrame.dispose(); // Fecha o initialFrame
         }
         setCursor(Cursor.getDefaultCursor());
-        showCapturedImage(); // Mostra apenas a imagem selecionada
+        try {
+        	showCapturedImage(); // Mostra apenas a imagem selecionada
+        }catch(Exception ee) {
+        	//null
+        }
     }
 
     @Override
@@ -118,7 +122,9 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         // Obtém a subimagem da área selecionada
         BufferedImage selectedImage = image.getSubimage(x, y, width, height);
 
-        String barcode = BarcodeSearch.stringCode(selectedImage);
+        StringBuilder barcode = new StringBuilder("");
+        
+        BufferedImage newImage =  BarcodeSearch.stringCode(selectedImage, barcode);
 
         // Exibe a imagem selecionada em um novo JFrame
         final JFrame selectedImageFrame = new JFrame("Imagem Selecionada");
@@ -130,7 +136,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         selectedImageFrame.add(panel);
 
         JLabel lb1 = new JLabel("Código: ");
-        JLabel lb2 = new JLabel(barcode);
+        JLabel lb2 = new JLabel(barcode.toString());
         lb2.setForeground(Color.RED); // Define a cor para lb2, se desejar
         
         // Adiciona lb1 e lb2 ao JPanel
@@ -139,7 +145,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         labelPanel.add(lb2);
         panel.add(labelPanel, BorderLayout.NORTH);
         
-        JLabel selectedImageLabel = new JLabel(new ImageIcon(selectedImage));
+        JLabel selectedImageLabel = new JLabel(new ImageIcon(newImage));
         
         // Adiciona a imagem ao JPanel
         panel.add(selectedImageLabel, BorderLayout.CENTER);
