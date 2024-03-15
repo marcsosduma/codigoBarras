@@ -24,24 +24,64 @@ import com.google.zxing.MultiFormatReader;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.multi.GenericMultipleBarcodeReader;
+import com.google.zxing.multi.MultipleBarcodeReader;
 
 public class BarcodeSearch {
 
-    public static BufferedImage stringCode(BufferedImage image, StringBuilder code) {
-        BufferedImage newImage = null;
-        String valor = "";
-        code.append("");
-        for(int m = 1; m<3; m++) {
-            try {      
-            	 valor = "Not Found....";
-            	 code.setLength(0);
-            	// Rotacionar a imagem
-                BufferedImage rotatedImage = ImageRotation.rotateImage(image);
-                //BufferedImage preprocessImage = preprocessImage(image);
-                // Escalona a imagem para o dobro do tamanho original
-                BufferedImage scaledImage = scaleImage(image, 5 * m);
+	public static BufferedImage stringCode(BufferedImage image, StringBuilder code) {
+	    BufferedImage newImage = null;
+	    String valor = "";
+	    code.append("");
+	    for (int m = 0; m < 1; m++) {
+	        try {
+	            valor = "Not Found....";
+	            code.setLength(0);
+
+	            BufferedImage denoisedImage = NoiseReduction.applyGaussianBlur(image, 3);
+	            // Aplicar filtro de nitidez avançado
+	            BufferedImage sharpenedImage = AdvancedSharpenFilter.apply(denoisedImage);
+	            
+	            // Aplicar suavização
+		        BufferedImage smoothedImage = SmoothingFilter.apply(sharpenedImage);
+	
+		         // Aprimorar contraste
+		         BufferedImage enhancedImage = ContrastEnhancement.apply(smoothedImage);
+	
+		         newImage = convertToGrayscale(sharpenedImage);
+	
+
+	         // Agora você pode usar a imagem resultante para detectar códigos de barras ou realizar outras operações
+	            
+	            /*	            
+	            // Aplicar redução de ruído
+	            BufferedImage denoisedImage = NoiseReduction.applyGaussianBlur(image, 3);
+	            // Aplicar filtro de nitidez avançado
+	            BufferedImage medianFiltered = MedianFilter.apply(denoisedImage, 3);
+	            BufferedImage sharpenedImage = AdvancedSharpenFilter.apply(medianFiltered);
+	            // Detecção de bordas
+	            newImage = EdgeDetectionFilter.apply(sharpenedImage);
+	            // Detecção de códigos de barras
+	             * 
+	             */
+	            valor = detectBarcode(newImage);
+	            code = code.append(valor);
+	            break;
+	        } catch (ReaderException e) {
+	            code = code.append(valor);
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	        }
+	    }
+	    return newImage;
+	}
+
+
+    
+	/*
+	 *                 BufferedImage scaledImage = scaleImage(sharpenedImage1, (5 * m) + 1);
                 // Convertendo a imagem para tons de cinza
-                BufferedImage grayscaleImage = convertToBlackAndWhite(scaledImage);
+                BufferedImage grayscaleImage = convertToGrayscale(scaledImage);
                 // Filtragem de suavização para redução de ruído
                 BufferedImage smoothedImage = applySmoothingFilter(grayscaleImage);
                 // Remoção de ruído
@@ -50,20 +90,10 @@ public class BarcodeSearch {
                 BufferedImage enhancedImage = enhanceContrast(denoisedImage);
                 // Detecção de bordas
                 newImage = detectEdges(enhancedImage);
-                // Detecção de códigos de barras
-                valor = detectBarcode(newImage);                
-                code = code.append(valor);
-                break;
-            } catch (ReaderException e) {
-                code = code.append(valor);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return newImage;
-    }
-    
-    public static BufferedImage scaleImage(BufferedImage image, double scale) {
+
+	 */
+
+	public static BufferedImage scaleImage(BufferedImage image, double scale) {
         int scaledWidth = (int) (image.getWidth() * scale);
         int scaledHeight = (int) (image.getHeight() * scale);
         BufferedImage scaledImage = new BufferedImage(scaledWidth, scaledHeight, image.getType());
@@ -232,9 +262,9 @@ public class BarcodeSearch {
         hints.put(DecodeHintType.POSSIBLE_FORMATS, formats);
         
         reader.setHints(hints);
-        
-        Result result = reader.decode(bitmap);
-        return result.getText();
+        MultipleBarcodeReader decoder = new GenericMultipleBarcodeReader(reader);
+        Result result[] = decoder.decodeMultiple(bitmap, hints);
+        return result[0].getText();
     }
 
     public static void main(String[] args) {
