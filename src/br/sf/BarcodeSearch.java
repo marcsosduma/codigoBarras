@@ -38,32 +38,15 @@ public class BarcodeSearch {
 	            valor = "Not Found....";
 	            code.setLength(0);
 
-	            BufferedImage denoisedImage = NoiseReduction.applyGaussianBlur(image, 3);
-	            // Aplicar filtro de nitidez avançado
-	            BufferedImage sharpenedImage = AdvancedSharpenFilter.apply(denoisedImage);
-	            
-	            // Aplicar suavização
-		        BufferedImage smoothedImage = SmoothingFilter.apply(sharpenedImage);
-	
-		         // Aprimorar contraste
-		         BufferedImage enhancedImage = ContrastEnhancement.apply(smoothedImage);
-	
-		         newImage = convertToGrayscale(sharpenedImage);
-	
-
-	         // Agora você pode usar a imagem resultante para detectar códigos de barras ou realizar outras operações
-	            
-	            /*	            
-	            // Aplicar redução de ruído
-	            BufferedImage denoisedImage = NoiseReduction.applyGaussianBlur(image, 3);
-	            // Aplicar filtro de nitidez avançado
-	            BufferedImage medianFiltered = MedianFilter.apply(denoisedImage, 3);
-	            BufferedImage sharpenedImage = AdvancedSharpenFilter.apply(medianFiltered);
-	            // Detecção de bordas
-	            newImage = EdgeDetectionFilter.apply(sharpenedImage);
-	            // Detecção de códigos de barras
-	             * 
-	             */
+                // Remoção de ruído
+                //BufferedImage denoisedImage = removeNoise(image);
+                BufferedImage medianFilterImage = MedianFilter.apply(image, 1);
+                BufferedImage sharpenedImage = AdvancedSharpenFilter.apply(medianFilterImage);
+	            BufferedImage scaledImage = scaleImage(sharpenedImage, 2);
+                BufferedImage grayscaleImage = convertToBlackAndWhite(scaledImage);
+                BufferedImage denoisedImage = NoiseReduction.applyGaussianBlur(grayscaleImage, 1);
+                newImage = enhanceContrast(denoisedImage);
+                // Detecção de bordas
 	            valor = detectBarcode(newImage);
 	            code = code.append(valor);
 	            break;
@@ -75,23 +58,6 @@ public class BarcodeSearch {
 	    }
 	    return newImage;
 	}
-
-
-    
-	/*
-	 *                 BufferedImage scaledImage = scaleImage(sharpenedImage1, (5 * m) + 1);
-                // Convertendo a imagem para tons de cinza
-                BufferedImage grayscaleImage = convertToGrayscale(scaledImage);
-                // Filtragem de suavização para redução de ruído
-                BufferedImage smoothedImage = applySmoothingFilter(grayscaleImage);
-                // Remoção de ruído
-                BufferedImage denoisedImage = removeNoise(smoothedImage);
-                // Aprimoramento de contraste adaptativo
-                BufferedImage enhancedImage = enhanceContrast(denoisedImage);
-                // Detecção de bordas
-                newImage = detectEdges(enhancedImage);
-
-	 */
 
 	public static BufferedImage scaleImage(BufferedImage image, double scale) {
         int scaledWidth = (int) (image.getWidth() * scale);

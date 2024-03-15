@@ -177,7 +177,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         panel.add(selectedImageLabel, BorderLayout.CENTER);
 
         // Cria e adiciona o botão "Fechar"
-        JButton closeButton = new JButton("Fechar");
+        JButton closeButton = new JButton("Voltar");
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -247,7 +247,10 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
                     CaptureScreenPanel captureScreenPanel = new CaptureScreenPanel(image);
                     initialFrame.add(captureScreenPanel);
                     initialFrame.pack();
-                    //initialFrame.setLocationRelativeTo(null);
+                    initialFrame.setLocationRelativeTo(null);
+                    ImageIcon icon = new ImageIcon("icon.png");
+                    initialFrame.setIconImage(icon.getImage());
+
                     
                  // Centraliza o JFrame horizontalmente e posiciona-o no topo da tela
                     Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
@@ -292,9 +295,11 @@ class CaptureScreenPanel extends JPanel {
             JFrame captureFrame = new JFrame("Screen Capture");
             ScreenCapture screenCapturePanel = new ScreenCapture(image, (JFrame) SwingUtilities.getWindowAncestor(this));
             captureFrame.add(screenCapturePanel);
+            captureFrame.setUndecorated(true);
             captureFrame.pack();
             captureFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             captureFrame.setLocationRelativeTo(null);
+            captureFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
             captureFrame.setVisible(true);
         } catch (Exception ex) {
             ex.printStackTrace();
