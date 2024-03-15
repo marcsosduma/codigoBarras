@@ -38,15 +38,14 @@ public class BarcodeSearch {
 	            valor = "Not Found....";
 	            code.setLength(0);
 
-                // Remoção de ruído
-                //BufferedImage denoisedImage = removeNoise(image);
+                // Remoção de ruido e melhora da imagem, especialmente para codigo de barras
                 BufferedImage medianFilterImage = MedianFilter.apply(image, 1);
                 BufferedImage sharpenedImage = AdvancedSharpenFilter.apply(medianFilterImage);
 	            BufferedImage scaledImage = scaleImage(sharpenedImage, 2);
                 BufferedImage grayscaleImage = convertToBlackAndWhite(scaledImage);
                 BufferedImage denoisedImage = NoiseReduction.applyGaussianBlur(grayscaleImage, 1);
                 newImage = enhanceContrast(denoisedImage);
-                // Detecção de bordas
+                // Deteccao do codigo de barras
 	            valor = detectBarcode(newImage);
 	            code = code.append(valor);
 	            break;
@@ -79,99 +78,22 @@ public class BarcodeSearch {
         // Percorre cada pixel da imagem original
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Obtém o valor de intensidade do pixel na imagem original
+                // Obtem o valor de intensidade do pixel na imagem original
                 int rgb = image.getRGB(x, y);
                 int red = (rgb >> 16) & 0xFF;
                 int green = (rgb >> 8) & 0xFF;
                 int blue = (rgb) & 0xFF;
                 
-                // Calcula o valor médio da intensidade para decidir se será branco ou preto
+                // Calcula o valor médio da intensidade para decidir se sera branco ou preto
                 int averageIntensity = (red + green + blue) / 3;
 
-                // Define o pixel correspondente na imagem binária como branco ou preto
+                // Define o pixel correspondente na imagem binaria como branco ou preto
                 int binaryValue = (averageIntensity < 128) ? 0xFF000000 : 0xFFFFFFFF;
                 binaryImage.setRGB(x, y, binaryValue);
             }
         }
 
         return binaryImage;
-    }
-
-    public static BufferedImage convertToGrayscale(BufferedImage image) {
-        BufferedImage grayImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
-        Graphics2D g2d = grayImage.createGraphics();
-        g2d.drawImage(image, 0, 0, null);
-        g2d.dispose();
-        return grayImage;
-    }
-
-    public static BufferedImage applySmoothingFilter(BufferedImage image) {
-        // Aplica um filtro de suavização (média ponderada) para reduzir o ruído
-        BufferedImage smoothedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
-        int kernelSize = 3; // Tamanho do kernel
-        float[] kernel = {
-                1.0f / 16, 2.0f / 16, 1.0f / 16,
-                2.0f / 16, 4.0f / 16, 2.0f / 16,
-                1.0f / 16, 2.0f / 16, 1.0f / 16
-        }; // Kernel com média ponderada
-        BufferedImageOp op = new ConvolveOp(new Kernel(kernelSize, kernelSize, kernel));
-        op.filter(image, smoothedImage);
-        return smoothedImage;
-    }
-
-    public static BufferedImage removeNoise(BufferedImage image) {
-        // Aplicando um filtro de mediana adaptativo para remoção de ruído
-        int width = image.getWidth();
-        int height = image.getHeight();
-        int kernelSize = 3; // Tamanho do kernel
-        int radius = kernelSize / 2;
-        BufferedImage denoisedImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-
-        // Itera sobre cada pixel da imagem
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                // Calcula a mediana dos pixels na vizinhança do pixel atual
-                int median = calculateAdaptiveMedian(image, x, y, kernelSize);
-                // Define o valor do pixel na imagem denoisedImage
-                denoisedImage.setRGB(x, y, median << 16 | median << 8 | median);
-            }
-        }
-
-        return denoisedImage;
-    }
-
-    public static int calculateAdaptiveMedian(BufferedImage image, int x, int y, int kernelSize) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-        int[] values = new int[kernelSize * kernelSize];
-        int index = 0;
-
-        // Itera sobre a janela do kernel
-        for (int ky = -kernelSize / 2; ky <= kernelSize / 2; ky++) {
-            for (int kx = -kernelSize / 2; kx <= kernelSize / 2; kx++) {
-                int nx = x + kx;
-                int ny = y + ky;
-
-                // Verifica os limites da imagem
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    // Obtém o valor do pixel na posição (nx, ny)
-                    values[index++] = image.getRGB(nx, ny) & 0xFF;
-                }
-            }
-        }
-
-        // Ordena os valores dos pixels
-        Arrays.sort(values);
-
-        // Calcula a mediana dos valores dos pixels
-        int median;
-        if (index % 2 == 0) {
-            median = (values[index / 2] + values[index / 2 - 1]) / 2;
-        } else {
-            median = values[index / 2];
-        }
-
-        return median;
     }
 
     public static BufferedImage enhanceContrast(BufferedImage image) {
@@ -207,13 +129,6 @@ public class BarcodeSearch {
         return enhancedImage;
     }
 
-    public static BufferedImage detectEdges(BufferedImage image) {
-        // Implemente aqui o algoritmo de detecção de bordas
-        // Por exemplo, operador Sobel ou Canny
-        // Veja: https://en.wikipedia.org/wiki/Edge_detection
-        return image; // Retorno temporário, você deve implementar a detecção de bordas
-    }
-
     private static String detectBarcode(BufferedImage image) throws Exception {
         LuminanceSource source = new BufferedImageLuminanceSource(image);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
@@ -235,7 +150,7 @@ public class BarcodeSearch {
 
     public static void main(String[] args) {
         try {
-            File file = new File("C:\\docs\\codigo_barra_exemplo.png");
+            File file = new File("codigo_barra_exemplo.png");
             BufferedImage image = ImageIO.read(file);
             StringBuilder result = new StringBuilder("");
             BufferedImage newImage = stringCode(image, result);

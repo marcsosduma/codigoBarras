@@ -8,8 +8,6 @@ public class NoiseReduction {
         int width = image.getWidth();
         int height = image.getHeight();
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-        // Criar uma matriz de convolução para o filtro Gaussiano
         double[][] kernel = generateGaussianKernel(radius);
 
         // Aplicar o filtro Gaussiano à imagem
