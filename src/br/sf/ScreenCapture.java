@@ -19,7 +19,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -132,7 +135,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         }
     }
 
-    private void showCapturedImage() {
+    private void showCapturedImage() throws IOException {
         // Determina a área selecionada
         int x = Math.min(startPoint.x, endPoint.x);
         int y = Math.min(startPoint.y, endPoint.y);
@@ -150,7 +153,12 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
 
         // Exibe a imagem selecionada em um novo JFrame
         final JFrame selectedImageFrame = new JFrame("Imagem Selecionada");
-        
+        String iconName = "icon.png";
+        URL iconURL = ScreenCapture.class.getResource("/" + iconName);
+        if (iconURL != null) {
+            BufferedImage iconImage = ImageIO.read(iconURL);
+            selectedImageFrame.setIconImage(iconImage);
+        } 
         // Cria um JPanel para organizar os componentes
         JPanel panel = new JPanel(new BorderLayout());
         
@@ -216,6 +224,13 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
                     captureFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     CaptureScreenPanel captureScreenPanel = new CaptureScreenPanel(image);
                     captureFrame.add(captureScreenPanel);
+                    String iconName = "icon.png";
+                    URL iconURL = ScreenCapture.class.getResource("/" + iconName);
+                    if (iconURL != null) {
+                        BufferedImage iconImage = ImageIO.read(iconURL);
+                        captureFrame.setIconImage(iconImage);
+                    } 
+
                     captureFrame.pack();
                     //captureFrame.setLocationRelativeTo(null);
                     // Centraliza o JFrame horizontalmente e posiciona-o no topo da tela
@@ -248,9 +263,12 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
                     initialFrame.add(captureScreenPanel);
                     initialFrame.pack();
                     initialFrame.setLocationRelativeTo(null);
-                    ImageIcon icon = new ImageIcon("icon.png");
-                    initialFrame.setIconImage(icon.getImage());
-
+                    String iconName = "icon.png";
+                    URL iconURL = ScreenCapture.class.getResource("/" + iconName);
+                    if (iconURL != null) {
+                        BufferedImage iconImage = ImageIO.read(iconURL);
+                        initialFrame.setIconImage(iconImage);
+                    } 
                     
                  // Centraliza o JFrame horizontalmente e posiciona-o no topo da tela
                     Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
