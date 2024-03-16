@@ -1,15 +1,12 @@
 package br.sf;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.awt.image.BufferedImageOp;
-import java.awt.image.ConvolveOp;
-import java.awt.image.Kernel;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -37,14 +34,38 @@ public class BarcodeSearch {
 	        try {
 	            valor = "Not Found....";
 	            code.setLength(0);
-
-                // Remoção de ruido e melhora da imagem, especialmente para codigo de barras
-                BufferedImage medianFilterImage = MedianFilter.apply(image, 1);
-                BufferedImage sharpenedImage = AdvancedSharpenFilter.apply(medianFilterImage);
-	            BufferedImage scaledImage = scaleImage(sharpenedImage, 2);
-                BufferedImage grayscaleImage = convertToBlackAndWhite(scaledImage);
-                BufferedImage denoisedImage = NoiseReduction.applyGaussianBlur(grayscaleImage, 1);
-                newImage = enhanceContrast(denoisedImage);
+	            
+	            newImage = image;
+	            
+	            if(m==0) {
+		            newImage = MedianFilter.apply(newImage, 1);
+		            newImage = convertToGrayscale(newImage);
+		            newImage = ContrastAdjustmentFilter.apply(newImage, 1.2);
+		            newImage = NoiseReduction.applyGaussianBlur(newImage, 1);
+		            newImage = scaleImage(newImage, 3);
+		            //newImage = convertToBlackAndWhite(newImage);
+		            newImage = ContrastAdjustmentFilter.apply(newImage, 2.0);
+		            newImage = PerspectiveCorrection.applyPerspectiveCorrectionIfNeeded(newImage);
+	            }else if(m==1){
+		            
+		            /*
+		            newImage = convertToGrayscale(newImage);
+		            newImage = HistogramEqualizationFilter.apply(newImage);
+		            newImage = DilatationFilter.apply(newImage);
+		            newImage = ErosionFilter.apply(newImage);
+		            newImage = SmoothingFilter.apply(newImage);
+		            newImage = ContrastAdjustmentFilter.apply(newImage, 2.8);
+		            */
+		            // código atual
+	                // Remoção de ruido e melhora da imagem, especialmente para codigo de barras
+	                newImage = MedianFilter.apply(newImage, 1);
+	                newImage = AdvancedSharpenFilter.apply(newImage);
+		            newImage = scaleImage(newImage, 2);
+	                newImage = convertToBlackAndWhite(newImage);
+	                newImage = NoiseReduction.applyGaussianBlur(newImage, 1);
+	                newImage = enhanceContrast(newImage);
+	            }
+                
                 // Deteccao do codigo de barras
 	            valor = detectBarcode(newImage);
 	            code = code.append(valor);
@@ -94,6 +115,26 @@ public class BarcodeSearch {
         }
 
         return binaryImage;
+    }
+    
+    public static BufferedImage convertToGrayscale(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        BufferedImage grayImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color color = new Color(image.getRGB(x, y));
+                int red = color.getRed();
+                int green = color.getGreen();
+                int blue = color.getBlue();
+                int grayValue = (int) (0.2989 * red + 0.5870 * green + 0.1140 * blue);
+                int grayRGB = new Color(grayValue, grayValue, grayValue).getRGB();
+                grayImage.setRGB(x, y, grayRGB);
+            }
+        }
+        return grayImage;
     }
 
     public static BufferedImage enhanceContrast(BufferedImage image) {
