@@ -179,7 +179,7 @@ public class ScreenCapture extends JPanel implements MouseListener, MouseMotionL
         labelPanel.add(lb2);
         panel.add(labelPanel, BorderLayout.NORTH);
         
-        JLabel selectedImageLabel = new JLabel(new ImageIcon(newImage));
+        JLabel selectedImageLabel = new JLabel(new ImageIcon(selectedImage));
         
         // Adiciona a imagem ao JPanel
         panel.add(selectedImageLabel, BorderLayout.CENTER);

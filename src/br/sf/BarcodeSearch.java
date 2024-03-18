@@ -30,9 +30,9 @@ public class BarcodeSearch {
 	    BufferedImage newImage = null;
 	    String valor = "";
 	    code.append("");
-	    for (int m = 0; m < 1; m++) {
+	    for (int m = 0; m < 2; m++) {
 	        try {
-	            valor = "Not Found....";
+	            valor = "Não encontrado....";
 	            code.setLength(0);
 	            
 	            newImage = image;
@@ -58,11 +58,11 @@ public class BarcodeSearch {
 		            */
 		            // código atual
 	                // Remoção de ruido e melhora da imagem, especialmente para codigo de barras
-	                newImage = MedianFilter.apply(newImage, 1);
-	                newImage = AdvancedSharpenFilter.apply(newImage);
-		            newImage = scaleImage(newImage, 2);
-	                newImage = convertToBlackAndWhite(newImage);
-	                newImage = NoiseReduction.applyGaussianBlur(newImage, 1);
+	            	newImage = MedianFilter.apply(newImage, 1);
+	            	newImage = AdvancedSharpenFilter.apply(newImage);
+	            	newImage = scaleImage(newImage, 2);
+	            	newImage = convertToBlackAndWhite(newImage);
+	            	newImage = NoiseReduction.applyGaussianBlur(newImage, 1);
 	                newImage = enhanceContrast(newImage);
 	            }
                 
