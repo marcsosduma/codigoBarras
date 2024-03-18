@@ -7,7 +7,7 @@
     <property name="dir.workspace" value="C:/Eclipse/workspace"/>
     <property name="dir.jarfile" value="C:/docs"/>
     <target name="create_run_jar">
-        <jar destfile="${dir.jarfile}/codigoBarra.jar" filesetmanifest="mergewithoutmain">
+        <jar destfile="${dir.jarfile}/codigoBarras.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Main-Class" value="br.sf.ScreenCapture"/>
                 <attribute name="Icon-Path" value="icon.ico"/>
