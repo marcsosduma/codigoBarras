@@ -30,7 +30,7 @@ public class BarcodeSearch {
 	    BufferedImage newImage = null;
 	    String valor = "";
 	    code.append("");
-	    for (int m = 0; m < 2; m++) {
+	    for (int m = 0; m < 3; m++) {
 	        try {
 	            valor = "Não encontrado....";
 	            code.setLength(0);
@@ -38,6 +38,13 @@ public class BarcodeSearch {
 	            newImage = image;
 	            
 	            if(m==0) {
+		            newImage = convertToGrayscale(newImage);
+		            newImage = HistogramEqualizationFilter.apply(newImage);
+		            newImage = DilatationFilter.apply(newImage);
+		            newImage = ErosionFilter.apply(newImage);
+		            newImage = SmoothingFilter.apply(newImage);
+		            newImage = ContrastAdjustmentFilter.apply(newImage, 1.2);
+	            }else if(m==1) {
 		            newImage = MedianFilter.apply(newImage, 1);
 		            newImage = convertToGrayscale(newImage);
 		            newImage = ContrastAdjustmentFilter.apply(newImage, 1.2);
@@ -46,16 +53,13 @@ public class BarcodeSearch {
 		            //newImage = convertToBlackAndWhite(newImage);
 		            newImage = ContrastAdjustmentFilter.apply(newImage, 2.0);
 		            newImage = PerspectiveCorrection.applyPerspectiveCorrectionIfNeeded(newImage);
-	            }else if(m==1){
-		            
-		            /*
-		            newImage = convertToGrayscale(newImage);
-		            newImage = HistogramEqualizationFilter.apply(newImage);
-		            newImage = DilatationFilter.apply(newImage);
-		            newImage = ErosionFilter.apply(newImage);
-		            newImage = SmoothingFilter.apply(newImage);
-		            newImage = ContrastAdjustmentFilter.apply(newImage, 2.8);
-		            */
+	            }else if(m==2){	            
+		            //newImage = convertToGrayscale(newImage);
+		            //newImage = HistogramEqualizationFilter.apply(newImage);
+		            //newImage = DilatationFilter.apply(newImage);
+		            //newImage = ErosionFilter.apply(newImage);
+		            //newImage = SmoothingFilter.apply(newImage);
+		            //newImage = ContrastAdjustmentFilter.apply(newImage, 2.8);
 		            // código atual
 	                // Remoção de ruido e melhora da imagem, especialmente para codigo de barras
 	            	newImage = MedianFilter.apply(newImage, 1);
