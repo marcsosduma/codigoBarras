@@ -38,13 +38,6 @@ public class BarcodeSearch {
 	            newImage = image;
 	            
 	            if(m==0) {
-		            newImage = convertToGrayscale(newImage);
-		            newImage = HistogramEqualizationFilter.apply(newImage);
-		            newImage = DilatationFilter.apply(newImage);
-		            newImage = ErosionFilter.apply(newImage);
-		            newImage = SmoothingFilter.apply(newImage);
-		            newImage = ContrastAdjustmentFilter.apply(newImage, 1.2);
-	            }else if(m==1) {
 		            newImage = MedianFilter.apply(newImage, 1);
 		            newImage = convertToGrayscale(newImage);
 		            newImage = ContrastAdjustmentFilter.apply(newImage, 1.2);
@@ -53,6 +46,13 @@ public class BarcodeSearch {
 		            //newImage = convertToBlackAndWhite(newImage);
 		            newImage = ContrastAdjustmentFilter.apply(newImage, 2.0);
 		            newImage = PerspectiveCorrection.applyPerspectiveCorrectionIfNeeded(newImage);
+	            }else if(m==1) {
+	            	newImage = convertToGrayscale(newImage);
+		            newImage = HistogramEqualizationFilter.apply(newImage);
+		            newImage = DilatationFilter.apply(newImage);
+		            newImage = ErosionFilter.apply(newImage);
+		            newImage = SmoothingFilter.apply(newImage);
+		            newImage = ContrastAdjustmentFilter.apply(newImage, 1.2);
 	            }else if(m==2){	            
 		            //newImage = convertToGrayscale(newImage);
 		            //newImage = HistogramEqualizationFilter.apply(newImage);
