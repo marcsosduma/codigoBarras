@@ -1,1 +1,1 @@
-"# codigoBarra" 
+"# codigoBarras" 
